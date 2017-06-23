@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<style>
+  .add,
+  .reduce {
+    font-size: 20px;
+    cursor: pointer
+  }
+
+  li[data-show='0'] {
+    color: red
+  }
+
+  li[data-show='1'] {
+    color: #000
+  }
+</style>
+
+<body>
+  <ul id="page">
+
+  </ul>
+  <p><button id="add-top">增加顶层节点</button></p>
+  <p><input placeholder="输入要搜索的名称" id="search-info" /><button id="search-btn">搜索</button>
+
+</body>
+
+</html>
+<script>
+  window.onload = function () {
+    var indexOf = 0,
+      page = document.getElementById('page'),
+      addBtn = document.getElementById('add-top'),
+      searchBtn = document.getElementById('search-btn'),
+      searchInfo = document.getElementById('search-info'),
+      allLi = document.getElementsByTagName('li')
+    //创建新节点
+    function addNode(top, tree, context, hide) {
+      var newNode = document.createElement('li');
+      newNode.setAttribute('data-top', top);
+      newNode.setAttribute('data-tree', tree);
+      newNode.setAttribute('data-show', '1');
+      newNode.style.marginLeft = 10 * top + 'px';
+      if (hide) {
+        newNode.style.display = 'none';
+      }
+
+      var content = document.createElement('span');
+      content.className = 'content';
+      content.textContent = context;
+      newNode.appendChild(content);
+
+      var addNode = document.createElement('span');
+      addNode.textContent = '+';
+      addNode.className = 'add';
+      newNode.appendChild(addNode);
+
+      var reduceNode = document.createElement('span');
+      reduceNode.textContent = '-';
+      reduceNode.className = 'reduce';
+      newNode.appendChild(reduceNode);
+
+      return newNode;
+    }
+    //搜索到正确节点后遍历显示
+    function loopSearch(el) {
+      if (el.tagName == 'UL') {
+        return true;
+      } else {
+        fold(el,false);
+        loopSearch(el.parentNode)
+      }
+    }
+    // 折叠
+    function fold(target, isShow) {
+      var childLi = [];
+      //获取子节点li
+      for (var i = 0; i < target.childNodes.length; i++) {
+        if (target.childNodes[i].tagName == 'LI') {
+          childLi.push(target.childNodes[i])
+        }
+      }
+
+      // 根据data-show折叠
+      if (isShow) {
+        for (var i = 0; i < childLi.length; i++) {
+          childLi[i].style.display = 'none'
+        }
+        target.setAttribute('data-show', '0');
+      } else {
+        for (var i = 0; i < childLi.length; i++) {
+          childLi[i].style.display = 'list-item'
+        }
+        target.setAttribute('data-show', '1');
+      }
+    }
+
+
+
+    // 增加节点
+    addBtn.onclick = function (e) {
+      var context = prompt('请输入标题', '这是顶层节点');
+      if (context) {
+        var topNode = addNode(0, indexOf++, context)
+        document.getElementById('page').appendChild(topNode)
+      } else {
+        alert('需要输入标题')
+      }
+    };
+
+    // 操作
+    page.onclick = function (e) {
+      var ev = ev || window.event,
+        target = ev.target || ev.srcElement;
+
+      // 增加子节点　
+      if (target.className === 'add') {
+        var context = prompt('请输入标题', '这是子节点');
+        if (context) {
+
+          target = target.parentNode;
+          var topNum = target.attributes['data-top'].value - 0 + 1,
+            treeNum = target.attributes['data-tree'].value,
+            hide = target.attributes['data-show'].value == '1' ? false : true
+
+          var childNode = addNode(topNum, treeNum, context, hide);
+
+          target.appendChild(childNode)
+        } else {
+          alert('需要输入标题')
+        }
+      } else if (target.className === 'reduce') {
+
+        //删除子节点
+        target = target.parentNode;
+        target.parentNode.removeChild(target)
+      } else if (target.className === 'content') {
+
+        //折叠节点
+        target = target.parentNode;
+        
+        fold(target, target.attributes['data-show'].value == '1')
+
+      }
+    }
+
+    // 搜索
+    searchBtn.onclick = function (e) {
+      var searchValue = searchInfo.value,
+        success = false;
+      for (var i = 0; i < allLi.length; i++) {
+        allLi[i].style.color = '';
+        if (allLi[i].firstChild.textContent == searchValue) {
+          allLi[i].style.color='#fd00da'
+          loopSearch(allLi[i])
+        }
+      }
+    }
+  }
+</script>
